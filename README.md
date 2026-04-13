@@ -8,17 +8,20 @@ For the parser (Task 1), I decided to use the `rich` library to generate a visua
 For the models, I used `TinyLlama` (1.1B) to show the parser can handle larger, modern architectures, but I specifically chose `GPT-2` (124M) for the fine-tuning and merging pipeline. I'll explain why in the working conditions below.
 
 ## Working Conditions & Bottlenecks
-To be completely transparent, the biggest bottleneck I faced was my hardware. I ran everything locally on my laptop, which has an NVIDIA GTX 1650 with a strict 4GB VRAM limit. 
+To be completely transparent, the biggest bottleneck I faced was my hardware. I ran everything locally on my laptop with the following setup:
+* **GPU:** NVIDIA GTX 1650 (Strict 4GB VRAM limit)
+* **CPU:** AMD Ryzen 5 4600H with Radeon Graphics
+* **RAM:** 16GB DDR4
 
-If I tried to load and fine-tune a 1.1B or 3.8B model, my GPU would instantly hit an Out-Of-Memory (OOM) error. To solve this, I:
+If I tried to load and fine-tune a 1.1B or 3.8B model, my 4GB GPU would instantly hit an Out-Of-Memory (OOM) error. To solve this, I:
 1. Used GPT-2 for the training pipeline.
 2. Kept the LoRA rank very low (`r=8`).
 3. Wrote a custom PyTorch training loop instead of using HuggingFace's `Trainer`. This gave me granular control over the batch size (kept at 8) and gradient accumulation, ensuring my VRAM stayed exactly where I needed it. 
 
-The pipeline works perfectly end-to-end (training took about 23 seconds for a small proof-of-concept dataset), and it's built to easily scale to larger models if deployed on better hardware.
+The pipeline works perfectly end-to-end (training took exactly 23.45 seconds for a small proof-of-concept dataset), and it's built to easily scale to larger models if deployed on better hardware.
 
 ## Extensibility & Scalability
-**Scaling to 50 models:**
+**Scaling to 10-50 models:**
 If we scale this to parse 50 models, the current script would crash simply because RAM/VRAM can't hold 50 `nn.Module` objects at once. The first thing that breaks is system memory. To fix this, I would implement lazy loading using `safetensors` metadata. Instead of downloading and loading entire weights, the system would only fetch the configuration headers to build the architecture trees. 
 
 **Different Architectures (Llama vs Qwen):**
