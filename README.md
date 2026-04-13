@@ -37,4 +37,7 @@ If I were to evolve this into an automated model-improvement system, here are th
 ## Honest Reflection
 Setting up the LoRA config via `peft` was straightforward—HuggingFace makes that almost too easy. 
 
-The challenging part was dealing with GPT-2's legacy architecture. GPT-2 uses `Conv1D` for its attention layers instead of standard `nn.Linear`. When it came time to merge the weights, I had to ensure `peft` was correctly mapping the `fan_in_fan_out` logic for Conv1D layers so the math didn't break during `merge_and_unload()`. I used the `peft` documentation to verify my `target_modules` (`c_attn`, `c_proj`), but building the custom loop and visualizing the merge success was my own design.
+The challenging part was dealing with GPT-2's legacy architecture. GPT-2 uses `Conv1D` for its attention layers instead of standard `nn.Linear`. When it came time to merge the weights, I had to ensure `peft` was correctly mapping the `fan_in_fan_out` logic for Conv1D layers so the math didn't break during `merge_and_unload()`. 
+
+**External Help & AI Tools:**
+To be completely transparent, I used an LLM-assisted IDE (Cursor) to help speed up writing boilerplate code, specifically for generating the `rich` library tree syntax and scaffolding the standard PyTorch training loop. However, the core architectural choices—such as selecting GPT-2 to fit my 4GB VRAM, restricting the LoRA rank to `r=8`, targeting the `c_attn` modules, and the custom batch-size handling—were entirely my own design decisions based on reading the `peft` documentation. I treated the LLM as a junior assistant to execute my logic faster, making the final solution completely my own.
